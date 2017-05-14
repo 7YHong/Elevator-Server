@@ -1,0 +1,57 @@
+/*body {*/
+  /*padding: 50px;*/
+  /*font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;*/
+/*}*/
+
+/*a {*/
+  /*color: #00B7FF;*/
+/*}*/
+.btn-w3r {
+  width: 200px;
+  height: 200px;
+  -moz-border-radius: 50%;
+  -webkit-border-radius: 50%;
+  border-radius: 50%;
+  background: #cb60b3; /* 旧版浏览器 */
+  background: -moz-linear-gradient(top,  #cb60b3 0%, #ad1283 50%, #de47ac 100%); /* FF3.6+ */
+  background: -o-linear-gradient(top,  #cb60b3 0%,#ad1283 50%,#de47ac 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(top,  #cb60b3 0%,#ad1283 50%,#de47ac 100%); /* IE10+ */
+  background: linear-gradient(to bottom,  #cb60b3 0%,#ad1283 50%,#de47ac 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#cb60b3', endColorstr='#de47ac',GradientType=0 ); /* IE6-9 */
+  color:#fff;
+}
+.btn-w3r:hover {
+  background: #333; /* 旧版浏览器 */
+  color:#e75616;
+}
+.btn-circle{
+  width: 32px;
+  height: 32px;
+  text-align: center;
+  padding: 6px 0;
+  font-size: 12px;
+  line-height: 1.4;
+  border-radius: 50%;
+}
+/**
+自定义pannel-elevator
+仿照pannel-warning
+ */
+.panel-elevator {
+  border-color: #E9B457;
+}
+.panel-elevator > .panel-heading {
+  color: #ffffff;
+  background-color: #AA6708;
+  border-color: #E9B457;
+}
+.panel-elevator > .panel-heading + .panel-collapse > .panel-body {
+  border-top-color: #E9B457;
+}
+.panel-elevator > .panel-heading .badge {
+  color: #AA6708;
+  background-color: #8a6d3b;
+}
+.panel-elevator > .panel-footer + .panel-collapse > .panel-body {
+  border-bottom-color: #E9B457;
+}

@@ -1,0 +1,41 @@
+extends layout
+
+block content
+    div(class='container')
+        h1 hello,world!
+        button(id='btn1' class='btn btn-primary') submit
+        button(id='btn2' class='btn btn-primary') btn
+        br
+        p(id='sp')
+
+    //script(src="https://cdn.bootcss.com/socket.io/1.7.3/socket.io.js")
+    <script src="https://cdn.bootcss.com/socket.io/1.7.3/socket.io.js"></script>
+    script.
+        var socket = io.connect('/');
+        socket.on('news', function (data) {
+            //console.log(data);
+            $("#sp").text(data);
+            //$("#sp").text(JSON.stringify(data));
+            socket.emit('my other event', {my: 'data'});
+        });
+        $("#btn1").click(function (e) {
+            e.preventDefault();
+
+            $.ajax({
+                url: "/users",
+                success: function (data) {
+                    $("#sp").html(data);
+                }
+            });
+        });
+        $("#btn2").click(function (e) {
+            e.preventDefault();
+
+            $.ajax({
+                url: "/json",
+                success: function (data) {
+                    //$("#sp").text(data);
+                    alert(data);
+                }
+            });
+        });

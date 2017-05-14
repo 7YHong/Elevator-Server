@@ -1,0 +1,21 @@
+doctype html
+html
+  head
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    title= title
+    <!-- Bootstrap core CSS -->
+    link(href="/css/bootstrap.min.css" rel="stylesheet")
+    <!-- Bootstrap theme -->
+    link(href="/css/bootstrap-theme.min.css" rel="stylesheet")
+    //link(href="https://maxcdn.bootstrapcdn.com/css/ie10-viewport-bug-workaround.css" rel="stylesheet")
+
+    //必须放在最下面，否则自定义样式无效
+    link(rel='stylesheet', href='/css/style.css')
+  body
+    script(src="/js/jquery.min.js")
+    script(src="/js/bootstrap.min.js")
+    block content
+    //script(src="https://maxcdn.bootstrapcdn.com/css/ie10-viewport-bug-workaround.js")

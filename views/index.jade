@@ -1,0 +1,264 @@
+extends layout
+
+block content
+  div(class='container' style='max-width: 800px')
+    img(src='../images/titleimg.jpg' class="img-responsive center-block")
+    h1(class='text-center') 基于ARM的电梯控制系统
+    div(class='row')
+      div(class='col-sm-5')
+        div(class='panel panel-primary')
+          div(class='panel-heading')
+            h4 电梯状态
+          div(class='panel-body')
+            table(class='table table-bordered table-condensed' style='text-align:center')
+              tbody()
+                -for(var i=7;i>=0;i--){
+                tr
+                  td(width='30%')='L' + (i + 1)
+                  td(id='floorindi' + i width='30%' style='background-color:gray')
+                  td
+                    button(disabled id='btnfloor_up' + i action='btnup' index=i class='btn btn-default glyphicon glyphicon-chevron-up btn-xs' aria-hidden="true")
+                    button(disabled id='btnfloor_down' + i action='btndown' index=i class='btn btn-default glyphicon glyphicon-chevron-down btn-xs' aria-hidden="true")
+                - }
+      div(class='col-sm-7')
+        div(class='panel panel-elevator')
+          div(class='panel-heading')
+            h4 电梯详情
+          div(class='panel-body')
+            div
+              label 连接情况
+              p(id='conn_status' class='lead bg-danger' style='padding:10px') 未连接
+            div(class='form-group')
+              label 最新消息
+              input(id='msg_latest' type='text' class='form-control' placeholder='最新一条消息将会显示在这里' readonly=)
+            div(class='form-horizontal')
+              div(class='form-group col-sm-7')
+                label 状态：
+                span(id='ele_status') a
+              div(class='form-group col-sm-6')
+                label 电梯门：
+                span(id='ele_door') a
+            div
+              label 厅内按钮
+              div(class='form-horizontal')
+                -for(var i=0;i<8;i++){
+                button(id='btnindoor' + i action='btnindoor' index=i class='btn btn-default btn-circle' disabled)=i
+                -}
+            div
+              button(id='switchremotectl' class='btn btn-danger' style='float:right') 开启远端控制
+    div(class='row')
+      div(class='col-sm-12')
+        div(class='panel panel-elevator')
+          div(class='panel-heading')
+            h4 状态信息
+          div(class='panel-body')
+            label 日志
+            textarea(id='logs' class='form-control' rows=5 readonly)
+
+  script(src='/socket.io/socket.io.js')
+  script.
+      var elevator = {};
+      var btnup;
+      var btndown;
+      var btnindoor;
+      var floorindi;
+      var lastarrive = 0;
+
+      var msg={};
+      //
+      //在文档加载好之后执行操作
+      //
+      $(document).ready(function () {
+          btnup = $('[id^="btnfloor_up"]');
+          btndown = $('[id^="btnfloor_down"]');
+          btnindoor = $('[id^="btnindoor"]');
+          floorindi = $('[id^="floorindi"]');
+          //
+          //与服务器建立websocket连接，并定义事件
+          //
+          var socket = io.connect('/');
+
+          socket.on('fullstatus', function (data) {
+              elevator = data;
+              $.func.updateLogs();
+              $.func.refreshDisp();
+          });
+          socket.on('news', function (data) {
+              $.func.updateLatest(JSON.stringify(data));
+              elevator[data.action][data.index]=data.data;
+              $.func.updateLogs();
+              $.func.refreshDisp();
+          });
+
+          //
+          //按钮事件绑定
+          //
+          $("[id*='btn']").click(function (e) {
+              e.preventDefault();
+              if ($(this).hasClass('btn-default')) {
+                  msg.action=$(this).attr('action');
+                  msg.index=$(this).attr('index');
+                  msg.data=1;
+                  socket.emit('news', msg);
+              }
+          });
+          $('#switchremotectl').click(function (e) {
+              e.preventDefault();
+              msg.action='status';
+              msg.index=1;
+              msg.data=1 - elevator.status[1];
+              socket.emit('news', msg);
+          });
+      });
+      //
+      //自定义方法
+      //
+      $.func = {
+          updateLogs:function () {
+              $('#logs').text('status:' + elevator['status'].toString() + '\n');
+              $('#logs').append('btnup:' + elevator['btnup'].toString() + '\n');
+              $('#logs').append('btndown:' + elevator['btndown'].toString() + '\n');
+              $('#logs').append('btnindoor:' + elevator['btnindoor'].toString() + '\n');
+          },
+
+          refreshDisp:function () {
+              //
+              //初始化按钮
+              //
+              for(var i=0;i<8;i++){
+                  $.func.updateBtn(btnup[i],elevator.btnup[7-i]);
+                  $.func.updateBtn(btndown[i],elevator.btndown[7-i]);
+                  $.func.updateBtn(btnindoor[i],elevator.btnindoor[i]);
+              }
+              $.func.updateRemoteCtl();
+              $.func.updateConnStatus();
+              $.func.updateStatus();
+              $.func.updateDoor();
+              $.func.updateArrive();
+          },
+
+          updateBtn: function (ele, pressed) {
+              if (pressed) {
+                  $(ele).addClass('btn-warning');
+                  $(ele).removeClass('btn-default');
+              } else {
+                  $(ele).addClass('btn-default');
+                  $(ele).removeClass('btn-warning');
+              }
+          },
+
+          updateLatest: function (msg) {
+              $('#msg_latest').val(msg);
+          },
+
+          updateRemoteCtl: function () {
+              if (elevator.status[1]) {
+                  //$('#ele_next').text('telctl is true');
+                  $("[id*='btn']").removeAttr('disabled');
+                  $('#switchremotectl').text('关闭远端控制');
+                  $('#switchremotectl').addClass('btn-success');
+                  $('#switchremotectl').removeClass('btn-danger');
+              } else {
+                  //$('#ele_next').text('telctl is false');
+                  $("[id*='btn']").attr('disabled', '');
+                  $('#switchremotectl').text('开启远端控制');
+                  $('#switchremotectl').removeClass('btn-success');
+                  $('#switchremotectl').addClass('btn-danger');
+              }
+          },
+
+          updateConnStatus: function () {
+              if (elevator.status[0]) {
+                  $('#conn_status').text('已连接');
+                  $('#conn_status').addClass('bg-primary');
+                  $('#conn_status').removeClass('bg-danger');
+              } else {
+                  $('#conn_status').text('未连接');
+                  $('#conn_status').removeClass('bg-primary');
+                  $('#conn_status').addClass('bg-danger');
+              }
+          },
+
+          updateArrive: function () {
+              var arrive=elevator.status[3];
+              $.func.updateBtn(btnindoor[arrive], 0);
+              if (elevator.status) $.func.updateBtn(btnup[7 - arrive], 0);
+              else $.func.updateBtn(btndown[7 - elevator.arrive], 0);
+              $(floorindi[lastarrive]).css('background-color', 'gray');
+              $(floorindi[7 - arrive]).css('background-color', 'green');
+              lastarrive = 7 - arrive;
+          },
+
+          updateStatus: function () {
+              var hint;
+              switch (elevator.status[2]) {
+                  case -1:
+                      hint = '下降';
+                      break;
+                  case 0:
+                      hint = '停靠';
+                      break;
+                  case 1:
+                      hint = '上升';
+                      break;
+                  default:
+                      hint = '未知状态:' + status;
+              }
+              $('#ele_status').text(hint);
+          },
+
+          updateDoor:function () {
+              var hint;
+              switch (elevator.status[3]) {
+                  case -1:
+                      hint = '正在关门';
+                      break;
+                  case 0:
+                      hint = '关';
+                      break;
+                  case 1:
+                      hint = '开';
+                      break;
+                  case 2:
+                      hint='正在开门';
+                      break;
+                  default:
+                      hint = '未知状态:' + status;
+              }
+              $('#ele_door').text(hint);
+          }
+      }
+//
+  socket.on('telctl', function (data) {
+  elevator.relctl = data;
+      $.func.updateTelCtl();
+  });
+    socket.on('conn_status', function (data) {
+    elevator.conn_status = data;
+        $.func.updateConnStatus();
+    })
+  switch (data.action) {
+                    case 'up':
+                        $.func.updateBtn(btnup[7-data.data], 1);
+                        break;
+                    case 'down':
+                        $.func.updateBtn(btndown[7-data.data], 1);
+                        break;
+                    case 'indoor':
+                        $.func.updateBtn(btnindoor[data.data], 1);
+                        break;
+                    case 'arrive':
+                        elevator.arrive=data.data;
+                        elevator.btnfloorup[data.data]=0;
+                        elevator.btnfloordown[data.data]=0;
+                        elevator.btnindoor[data.data]=0;
+                        $.func.updateArrive();
+                        break;
+                    case 'status':
+                        elevator.status = data.data;
+                        $.func.updateStatus();
+                        break;
+                    case 'door':
+                        elevator.door = data.data;
+                        break;
+                }
