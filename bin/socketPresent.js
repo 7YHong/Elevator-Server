@@ -5,8 +5,9 @@ var net = require('net');
 var Elevator = require('./elevator');
 var elevator = new Elevator();
 var io;
-var HOST = '192.168.1.107';
+var HOST = '192.168.137.1';
 var PORT = 6969;
+var tcpSock;
 module.exports = {
     bindWebSocket: function (server) {
         console.log('bind websocket to server')
@@ -22,7 +23,13 @@ module.exports = {
     openTcpServer: function () {
         console.log('open tcp server')
         net.createServer(function (sock) {
+            tcpSock=sock;
             handle.tcpConn(sock);
+
+            sock.on('error',function (err) {
+                console.log('tcp err:'+err.message);
+            });
+
             sock.on('data', handle.tcpNews.bind(this,sock));
 
             // 为这个socket实例添加一个"close"事件处理函数
@@ -39,10 +46,13 @@ var handle = {
     },
     socketNews: function (socket,data) {
         console.log('receive data from web:'+JSON.stringify(data));
+        tcpSock.write(JSON.stringify(data)+'\r\n');
         elevator.updateAttr(data);
         io.sockets.emit('news',data);
     },
     tcpConn:function (sock) {
+        sock.setKeepAlive(true);
+        //sock.setTimeout(1000);
         console.log('tcp CONNECTED: ' +
             sock.remoteAddress + ' ' + sock.remotePort);
         var msg={};
@@ -54,22 +64,29 @@ var handle = {
     },
     tcpNews:function (sock,data) {
         console.log('tcp DATA ' + sock.remoteAddress + ': ' + data);
-        // 回发该数据，客户端将收到来自服务端的数据
-        sock.write('You said "' + data + '"');
-
-        var json;
-        try{
-            json=JSON.parse(data);
-        }catch (err){
-            console.warn(err.message);
-            return;
+        jsonlist=String(data).match(/(\{.+?\})(?={|$)/g);       //使用正则表达式分开粘包的json
+        console.log("jsonlist length="+jsonlist.length)
+        for(i in jsonlist) {
+            console.log(jsonlist[i])
+            var json;
+            try {
+                json = JSON.parse(jsonlist[i]);
+            } catch (err) {
+                console.warn(err.message);
+                return;
+            }
+            if (json.action == 'fullstatus') {
+                console.log('receive fullstatus from tcp client');
+                data = json.data;
+                for (key in data) {
+                    elevator[key] = data[key]
+                }
+                io.sockets.emit('fullstatus', data);
+                continue;
+            }
+            elevator.updateAttr(json);
+            io.sockets.emit('news', json);
         }
-        if(json.action=='fullstatus'){
-            console.log('receive fullstatus from tcp client');
-            return;
-        }
-        elevator.updateAttr(json);
-        io.sockets.emit('news',json);
     },
     tcpClose:function (sock,data) {
         console.log('tcp CLOSED: ' +

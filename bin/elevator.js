@@ -25,8 +25,9 @@ function Elevator() {
 //1:remotectl
 //2:status
 //3:door
-//4:arrive
+//4:arrive （为了修正Lua带来的偏差，arrive从1开始）
     this.status = new Array(4);
+    this.status[4]=1;
 //各种按钮的状态
     this.btnup = new Array(8);
     this.btndown = new Array(8);
