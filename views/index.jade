@@ -42,10 +42,12 @@ block content
               label 厅内按钮
               div(class='form-horizontal')
                 -for(var i=0;i<8;i++){
-                button(id='btnindoor' + i action='btnindoor' index=i class='btn btn-default btn-circle' disabled)=i
+                button(id='btnindoor' + i action='btnindoor' index=i class='btn btn-default btn-circle' disabled)=i+1
                 -}
             div
-              button(id='switchremotectl' class='btn btn-danger' style='float:right') 开启远端控制
+              //button(id='switchremotectl' class='btn btn-danger' style='float:right') 开启远端控制
+              button(class='btn btn-info' style='float:right' data-toggle="modal" data-target="#AlertModal") 设置报警邮箱
+
     div(class='row')
       div(class='col-sm-12')
         div(class='panel panel-elevator')
@@ -55,6 +57,43 @@ block content
             label 日志
             textarea(id='logs' class='form-control' rows=5 readonly)
 
+  div(class="modal fade" id="MailSetting" tabindex="-1" role="dialog" )
+    div(class="modal-dialog" role="document")
+      div(class="modal-content")
+        div(class="modal-header")
+          button(type="button" class="close" data-dismiss="modal" aria-label="Close")
+            span(aria-hidden="true") &times;
+          h4(class="modal-title") 设置报警邮箱
+        div(class="modal-body")
+          form
+            div(class='form-group')
+              label(for='exampleInputEmail1') 报警邮箱地址
+              input(type="email" class="form-control" id="exampleInputEmail1" placeholder="username@mailhost.com")
+        div(class="modal-footer")
+          button(type="button" class="btn btn-default" data-dismiss="modal") 取消
+          button(type="button" class="btn btn-primary" data-dismiss="modal") 确认
+
+  div(class="modal fade" id="AlertModal" tabindex="-1" role="dialog" )
+    div(class="modal-dialog" role="document")
+      div(class="modal-content")
+        //div(class="modal-header")
+          button(type="button" class="close" data-dismiss="modal" aria-label="Close")
+            span(aria-hidden="true") &times;
+          h4(class="modal-title") 警告，电梯故障
+        div(class="modal-body")
+          div(class="alert alert-danger" role="alert")
+            h2 电梯出现异常
+            br
+            h4 异常时间：2017年5月25日21点21分
+            h4 电梯类型：电梯运行模拟板
+            h4 异常类型：模拟板自定义异常
+            h4 异常信息：模拟产生的异常信号
+            br
+            h4(class='text-right') 电梯地点：XX小区XX单元
+            h4(class='text-right') 负责人电话：XXX-XXXX-XXXX
+        div(class="modal-footer")
+          button(type="button" class="btn btn-default" data-dismiss="modal") 取消
+          button(type="button" class="btn btn-primary" data-dismiss="modal") 确认
   script(src='/socket.io/socket.io.js')
   script.
       var elevator = {};

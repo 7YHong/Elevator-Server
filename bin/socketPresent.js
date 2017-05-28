@@ -5,7 +5,7 @@ var net = require('net');
 var Elevator = require('./elevator');
 var elevator = new Elevator();
 var io;
-var HOST = '192.168.137.1';
+var HOST = 'localhost';
 var PORT = 6969;
 var tcpSock;
 module.exports = {
@@ -46,7 +46,7 @@ var handle = {
     },
     socketNews: function (socket,data) {
         console.log('receive data from web:'+JSON.stringify(data));
-        tcpSock.write(JSON.stringify(data)+'\r\n');
+        tcpSock.write(JSON.stringify(data));
         elevator.updateAttr(data);
         io.sockets.emit('news',data);
     },
