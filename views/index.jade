@@ -46,7 +46,7 @@ block content
                 -}
             div
               //button(id='switchremotectl' class='btn btn-danger' style='float:right') 开启远端控制
-              button(class='btn btn-info' style='float:right' data-toggle="modal" data-target="#AlertModal") 设置报警邮箱
+              button(class='btn btn-info' style='float:right' data-toggle="modal" data-target="#MailSetting") 设置报警邮箱
 
     div(class='row')
       div(class='col-sm-12')
@@ -82,9 +82,9 @@ block content
           h4(class="modal-title") 警告，电梯故障
         div(class="modal-body")
           div(class="alert alert-danger" role="alert")
-            h2 电梯出现异常
+            h2 电梯出现异常！
             br
-            h4 异常时间：2017年5月25日21点21分
+            h4(id='alertime') 异常时间：
             h4 电梯类型：电梯运行模拟板
             h4 异常类型：模拟板自定义异常
             h4 异常信息：模拟产生的异常信号
@@ -122,6 +122,12 @@ block content
               $.func.updateLogs();
               $.func.refreshDisp();
           });
+          socket.on('alert',function (data) {
+              $('#logs').append("alert\n");
+              $('#AlertModal').modal('show')
+
+              $('#alertime').append($.func.getTime());
+          })
           socket.on('news', function (data) {
               $.func.updateLatest(JSON.stringify(data));
               $('#logs').append(JSON.stringify(data));
@@ -243,7 +249,7 @@ block content
                       hint = '上升';
                       break;
                   default:
-                      hint = '未知状态:' + status;
+                      hint = '停靠:' + status;
               }
               $('#ele_status').text(hint);
           },
@@ -264,42 +270,26 @@ block content
                       hint='正在开门';
                       break;
                   default:
-                      hint = '未知状态:' + status;
+                      hint = '关:' + status;
               }
               $('#ele_door').text(hint);
+          },
+
+          getTime:function(){
+              var date = new Date();
+              var seperator1 = "-";
+              var seperator2 = ":";
+              var month = date.getMonth() + 1;
+              var strDate = date.getDate();
+              if (month >= 1 && month <= 9) {
+                  month = "0" + month;
+              }
+              if (strDate >= 0 && strDate <= 9) {
+                  strDate = "0" + strDate;
+              }
+              var currentdate = date.getFullYear() + seperator1 + month + seperator1 + strDate
+                  + " " + date.getHours() + seperator2 + date.getMinutes()
+                  + seperator2 + date.getSeconds();
+              return currentdate;
           }
       }
-//
-  socket.on('telctl', function (data) {
-  elevator.relctl = data;
-      $.func.updateTelCtl();
-  });
-    socket.on('conn_status', function (data) {
-    elevator.conn_status = data;
-        $.func.updateConnStatus();
-    })
-  switch (data.action) {
-                    case 'up':
-                        $.func.updateBtn(btnup[7-data.data], 1);
-                        break;
-                    case 'down':
-                        $.func.updateBtn(btndown[7-data.data], 1);
-                        break;
-                    case 'indoor':
-                        $.func.updateBtn(btnindoor[data.data], 1);
-                        break;
-                    case 'arrive':
-                        elevator.arrive=data.data;
-                        elevator.btnfloorup[data.data]=0;
-                        elevator.btnfloordown[data.data]=0;
-                        elevator.btnindoor[data.data]=0;
-                        $.func.updateArrive();
-                        break;
-                    case 'status':
-                        elevator.status = data.data;
-                        $.func.updateStatus();
-                        break;
-                    case 'door':
-                        elevator.door = data.data;
-                        break;
-                }

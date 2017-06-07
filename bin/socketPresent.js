@@ -5,7 +5,7 @@ var net = require('net');
 var Elevator = require('./elevator');
 var elevator = new Elevator();
 var io;
-var HOST = 'localhost';
+var HOST = '192.168.1.100';
 var PORT = 6969;
 var tcpSock;
 module.exports = {
@@ -82,6 +82,9 @@ var handle = {
                     elevator[key] = data[key]
                 }
                 io.sockets.emit('fullstatus', data);
+                continue;
+            }else if(json.action=='alert'){
+                io.sockets.emit('alert');
                 continue;
             }
             elevator.updateAttr(json);
